@@ -40,24 +40,24 @@ const SCHED = [
 // ── CALISTHENICS ──────────────────────────────────────────────────────────────
 const HOLDS = {
   frontlever: { name:"Front Lever",   abbr:"FL",   color:"#F87171", emoji:"🦅", kind:"static",  ladder:["Tuck","Advanced Tuck","One-Leg","Straddle","Full"], cues:{
-      "Tuck":"Hang, pull shoulder blades down, tuck knees to chest and hold body horizontal.",
-      "Advanced Tuck":"Same as tuck but open the hips so your back is flat and horizontal, knees still bent.",
-      "One-Leg":"From advanced tuck, extend ONE leg straight out. Alternate legs each set.",
-      "Straddle":"Both legs straight but spread wide apart — easier than full, holds body level.",
-      "Full":"Whole body straight and horizontal, legs together. The full front lever."
-    }, currentLevel:"Advanced Tuck", goal:"Build to 12s → Straddle", note:"Scapula depressed. Straight arms. Hollow body.", defSecs:7,  defSets:5, defInc:1, isReps:false, rehab:false },
-  handstand:  { name:"Wall Handstand",abbr:"WHS",  color:"#60A5FA", emoji:"🤸", kind:"static",  ladder:["Back-to-wall","Chest-to-wall","Kick-up (spotted)","Freestanding"], cues:{
-      "Back-to-wall":"Kick up with your BACK to the wall, heels resting on it. Easiest entry — get used to being inverted.",
-      "Chest-to-wall":"Face the wall, walk feet up until chest/stomach touch it. Stacks you straight — builds the real alignment.",
-      "Kick-up (spotted)":"Kick up away from the wall and balance, catching yourself back on it. Learning the balance point.",
-      "Freestanding":"Full freestanding handstand, no wall. Hold the balance."
-    }, currentLevel:"Back-to-wall", goal:"60s hold → kick-up", note:"Stack shoulders over wrists. Squeeze everything, look at your hands.", defSecs:20, defSets:4, defInc:5, isReps:false, rehab:false },
+      "Tuck":"Hang, pull shoulder blades DOWN, tuck knees to chest, hold body horizontal. Stop 2s before failure.",
+      "Advanced Tuck":"Open the hips so your back is flat & horizontal, knees still bent. Keep 2s in reserve.",
+      "One-Leg":"From advanced tuck, extend ONE leg straight. Alternate legs each set.",
+      "Straddle":"Both legs straight, spread wide — shortens the lever vs full. Toes pointed, hips level.",
+      "Full":"Legs straight & together, whole body horizontal. At 95kg this is a ~95kg horizontal hold."
+    }, currentLevel:"Advanced Tuck", goal:"Hold 10s clean (2s in reserve) → next rung", note:"Never max every set — injury risk. 2-3s in reserve. Rest 3min between sets.", defSecs:6,  defSets:5, defInc:1, gradAt:10, isReps:false, rehab:false },
+  handstand:  { name:"Wall Handstand",abbr:"WHS",  color:"#60A5FA", emoji:"🤸", kind:"static",  ladder:["Back-to-wall","Chest-to-wall","Kick-up + balance","Freestanding"], cues:{
+      "Back-to-wall":"Kick up BACK to wall, heels on it. Easiest entry — builds inverted strength & endurance.",
+      "Chest-to-wall":"Face wall, walk feet up till chest/stomach touch. Straight line, push floor away, look between hands. This builds the real handstand.",
+      "Kick-up + balance":"Away from wall — kick up and find balance on fingertip pressure. Start 1-3s. Bail by cartwheeling out.",
+      "Freestanding":"Free handstand, no wall. Fingertips do the balancing, not the palms."
+    }, currentLevel:"Back-to-wall", goal:"Chest-to-wall 60s straight line → freestanding", note:"Skill, not strength — practice OFTEN (even daily), short sessions. Wrist prep first.", defSecs:20, defSets:3, defInc:5, gradAt:60, isReps:false, rehab:false },
   lsit:       { name:"L-Sit",         abbr:"LS",   color:"#F472B6", emoji:"🪑", kind:"static",  ladder:["Tucked","One-Leg","Full","Hanging"], cues:{
       "Tucked":"On parallettes/floor, push shoulders down, lift hips, tuck knees to chest and hold.",
       "One-Leg":"From tucked, extend ONE leg straight out level with hips. Alternate legs.",
       "Full":"Both legs straight out, level with hips, toes pointed. The full L-sit.",
       "Hanging":"Hang from a bar and raise straight legs to an L. Hardest version."
-    }, currentLevel:"Tucked L-Sit", goal:"Full to 20s", note:"Depress shoulders. Compress hip flexors + abs.", defSecs:10, defSets:4, defInc:2, isReps:false, rehab:false },
+    }, currentLevel:"Tucked L-Sit", goal:"Hold 20s clean → next rung", note:"Push shoulders DOWN (depress), lift tall. Point toes. Build toward 20-30s.", defSecs:10, defSets:4, defInc:2, gradAt:20, isReps:false, rehab:false },
   hspushup:   { name:"Wall HSPU",     abbr:"HSPU", color:"#FBBF24", emoji:"💪", kind:"dynamic", ladder:["Wall negative","Wall partial","Wall full","Deficit"], cues:{
       "Wall negative":"Chest-to-wall handstand, lower yourself SLOWLY to the floor (3-5s). No press back up — reset and repeat.",
       "Wall partial":"Lower down, press back up through the top part of the range only.",
@@ -75,7 +75,7 @@ const HOLDS = {
 
 // Weighted calisthenics strength — tracked in kg like barbell (added weight)
 const CALI_LIFTS = {
-  wpullup: { name:"Weighted Pull-up", abbr:"W-PU", color:"#A78BFA", base:10, defInc:2.5, note:"Added kg. Full hang to chin over bar." },
+  wpullup: { name:"Weighted Pull-up", abbr:"W-PU", color:"#A78BFA", base:10, defInc:2.5, note:"Full hang → chin over bar. 4-6 reps for strength. Front lever wants ~+38kg (40% BW)." },
   wdip:    { name:"Weighted Dip",     abbr:"W-DIP",color:"#22D3EE", base:15, defInc:2.5, note:"Added kg. Full depth, lock out top." },
 };
 
@@ -95,6 +95,34 @@ const STANDARDS = {
   squat:    { label:"Back Squat",  color:"#F7B731", tiers:[{label:"Beginner",kg:100},{label:"Intermediate",kg:140,goal:true},{label:"Advanced",kg:180},{label:"Elite",kg:230}] },
   bench:    { label:"Bench Press", color:"#48CAE4", tiers:[{label:"Beginner",kg:73}, {label:"Intermediate",kg:95, goal:true},{label:"Advanced",kg:115},{label:"Elite",kg:150}] },
   ohp:      { label:"OHP",         color:"#74C69D", tiers:[{label:"Beginner",kg:50}, {label:"Intermediate",kg:70, goal:true},{label:"Advanced",kg:90}, {label:"Elite",kg:115}] },
+};
+
+
+// ── CALI BENCHMARKS ───────────────────────────────────────────────────────────
+// Weighted-lift tiers scaled from bodyweight (% BW added), rounded to 2.5kg.
+// Sources: Liftoff/FitnessVolt/Quora weighted pull-up & dip standards (added-weight % BW).
+const CALI_STANDARDS = {
+  wpullup: { label:"Weighted Pull-up", color:"#A78BFA", unit:"added", tiers:[
+    { label:"Beginner",    kg:0,  note:"clean bodyweight reps" },
+    { label:"Intermediate",kg:20, goal:true },
+    { label:"Advanced",    kg:35 },
+    { label:"Elite",       kg:67 },
+  ] },
+  wdip: { label:"Weighted Dip", color:"#22D3EE", unit:"added", tiers:[
+    { label:"Beginner",    kg:0,  note:"clean bodyweight reps" },
+    { label:"Intermediate",kg:25, goal:true },
+    { label:"Advanced",    kg:40 },
+    { label:"Elite",       kg:71 },
+  ] },
+};
+
+// Skill milestone tiers — which progression rung = which level.
+// Index maps to the skill's ladder position.
+const SKILL_STANDARDS = {
+  frontlever: { label:"Front Lever", color:"#F87171", tiers:["Tuck","Advanced Tuck","Straddle","Full"] },
+  handstand:  { label:"Handstand",   color:"#60A5FA", tiers:["Back-to-wall 30s","Chest-to-wall 60s","Freestanding 10s","Freestanding 30s"] },
+  lsit:       { label:"L-Sit",       color:"#F472B6", tiers:["Tucked","One-Leg","Full 15s","Full 30s"] },
+  muscleup:   { label:"Muscle-Up",   color:"#9D8DF1", tiers:["False-grip hold","Negative","Kipping","Strict"] },
 };
 
 // ── MOTIVATIONS ───────────────────────────────────────────────────────────────
@@ -1136,6 +1164,9 @@ function HoldCard(props) {
           <div style={{ display:"flex", alignItems:"baseline", gap:4 }}>
             <div className="hc-val" style={{ color: hold.color }}>{displayVal}</div>
             <div className="hc-unit">{displayUnit}</div>
+            {!hold.isReps && hold.gradAt && cfg.secs < hold.gradAt && (
+              <div style={{fontSize:11,fontWeight:700,color:"var(--mid)",fontFamily:"'Space Mono',monospace",marginLeft:2}}>→ {hold.gradAt}s to level up</div>
+            )}
           </div>
           {level && <div style={{display:"inline-block",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#fff",background:hold.color,borderRadius:6,padding:"2px 8px",marginBottom:4}}>{level}</div>}
           {hold.cues && hold.cues[level] ? <div className="hc-note">{hold.cues[level]}</div> : <div className="hc-note">{hold.note}</div>}
@@ -1617,6 +1648,110 @@ function Benchmarks(props) {
   );
 }
 
+// ── CALI BENCHMARKS ───────────────────────────────────────────────────────────
+function CaliBenchmarks(props) {
+  var caliOrms = props.caliOrms || {};   // { wpullup: bestAddedKg, wdip: ... }
+  var holdLevels = props.holdLevels || {}; // { frontlever: ladderIdx, ... }
+  return (
+    <div>
+      {/* Weighted strength — kg tiers, mirrors barbell */}
+      {Object.keys(CALI_STANDARDS).map(function(id) {
+        var std = CALI_STANDARDS[id];
+        var orm = caliOrms[id] || 0;
+        var reachedIdx = -1;
+        std.tiers.forEach(function(t, i) { if (orm >= t.kg) reachedIdx = i; });
+        return (
+          <div key={id} className="bm-card">
+            <div className="bm-head">
+              <div className="bm-dot" style={{ background:std.color }} />
+              <div className="bm-name" style={{ color:std.color }}>{std.label}</div>
+              <div className="bm-orm">
+                <div className="bm-orm-val" style={{ color: orm > 0 ? std.color : "var(--mid)" }}>{orm > 0 ? "+" + orm + "kg" : "BW"}</div>
+                <div className="bm-orm-lbl">best add</div>
+              </div>
+            </div>
+            <div className="bm-tiers">
+              {std.tiers.map(function(tier, i) {
+                var achieved = orm >= tier.kg;
+                var isNext = i === reachedIdx + 1;
+                return (
+                  <div key={i} className="bm-tier">
+                    <div className="bm-tier-head">
+                      <span className="bm-tier-label" style={{ color: achieved ? std.color : isNext ? "var(--ink)" : "var(--mid)" }}>
+                        {tier.label}
+                        {achieved && <span className="bm-achieved">✓</span>}
+                        {isNext && !achieved && <span style={{ fontSize:9, color:std.color, marginLeft:6, fontWeight:700, background: std.color + '22', borderRadius:4, padding:'1px 5px' }}>← NEXT</span>}
+                        {tier.goal && !achieved && <span style={{ fontSize:8, color:"var(--mid)", marginLeft:4, fontWeight:700 }}> · goal</span>}
+                        {tier.note && <span style={{ fontSize:8, color:"var(--mid)", marginLeft:4, fontWeight:700, fontStyle:"italic" }}> {tier.note}</span>}
+                      </span>
+                      <span className="bm-tier-kg" style={{ color: achieved ? std.color : isNext ? "var(--ink)" : "var(--mid)" }}>{tier.kg === 0 ? "BW" : "+" + tier.kg + "kg"}</span>
+                    </div>
+                    <div className="bm-track">
+                      {(function() {
+                        var prevKg = i === 0 ? 0 : std.tiers[i-1].kg;
+                        var rangePct = achieved ? 100 : Math.min(100, Math.max(0, orm > prevKg ? ((orm - prevKg) / (tier.kg - prevKg)) * 100 : 0));
+                        return <div className="bm-fill" style={{ width: rangePct + "%", background: achieved ? std.color : isNext ? std.color + "cc" : "var(--light)" }} />;
+                      })()}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="bm-src">added weight · % {BW}kg BW · Liftoff / FitnessVolt standards</div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Skill milestones — which progression you own */}
+      {Object.keys(SKILL_STANDARDS).map(function(id) {
+        var std = SKILL_STANDARDS[id];
+        var lvl = holdLevels[id] || 0;
+        // Map ladder index to milestone tier (ladder is finer-grained than the 4 milestones)
+        var ladder = HOLDS[id] ? HOLDS[id].ladder : [];
+        var curName = ladder[lvl] || "";
+        // reachedIdx = how many milestone tiers cleared, based on ladder progress fraction
+        var frac = ladder.length > 1 ? lvl / (ladder.length - 1) : 0;
+        var reachedIdx = Math.round(frac * (std.tiers.length - 1)) - 1;
+        return (
+          <div key={id} className="bm-card">
+            <div className="bm-head">
+              <div className="bm-dot" style={{ background:std.color }} />
+              <div className="bm-name" style={{ color:std.color }}>{std.label}</div>
+              <div className="bm-orm">
+                <div className="bm-orm-val" style={{ color: std.color, fontSize:13 }}>{curName}</div>
+                <div className="bm-orm-lbl">current</div>
+              </div>
+            </div>
+            <div className="bm-tiers">
+              {std.tiers.map(function(tier, i) {
+                var achieved = i <= reachedIdx;
+                var isNext = i === reachedIdx + 1;
+                var tierNames = ["Beginner","Intermediate","Advanced","Elite"];
+                return (
+                  <div key={i} className="bm-tier">
+                    <div className="bm-tier-head">
+                      <span className="bm-tier-label" style={{ color: achieved ? std.color : isNext ? "var(--ink)" : "var(--mid)" }}>
+                        {tierNames[i] || tier}
+                        {achieved && <span className="bm-achieved">✓</span>}
+                        {isNext && <span style={{ fontSize:9, color:std.color, marginLeft:6, fontWeight:700, background: std.color + '22', borderRadius:4, padding:'1px 5px' }}>← NEXT</span>}
+                      </span>
+                      <span className="bm-tier-kg" style={{ color: achieved ? std.color : isNext ? "var(--ink)" : "var(--mid)", fontSize:11 }}>{tier}</span>
+                    </div>
+                    <div className="bm-track">
+                      <div className="bm-fill" style={{ width: achieved ? "100%" : isNext ? "40%" : "0%", background: achieved ? std.color : std.color + "cc" }} />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="bm-src">milestone = progression rung owned</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── HISTORY BUILDERS ──────────────────────────────────────────────────────────
 // Build history from real session log entries
 // Each entry: { cycle, dayIdx, lifts: { liftId: { weight, volume, maxWeight, orm } } }
@@ -2067,10 +2202,12 @@ export default function App() {
         });
         if (anyDone && !anyFail) {
           var newSecs = cfg.secs + (cfg.inc || HOLDS[id].defInc);
-          // Graduate if at top of typical range (12s)
-          if (newSecs >= 12 && next.holdLevels[id] < HOLDS[id].ladder.length - 1) {
+          var gradAt = HOLDS[id].gradAt || 12;
+          // Graduate only when past this skill's own threshold AND room on the ladder
+          if (newSecs >= gradAt && next.holdLevels[id] < HOLDS[id].ladder.length - 1) {
             next.holdLevels[id] = next.holdLevels[id] + 1;
-            cfg.secs = Math.max(3, Math.round(HOLDS[id].defSecs * 0.7));
+            // Reset to a manageable starting hold on the harder progression
+            cfg.secs = Math.max(3, Math.round(HOLDS[id].defSecs * 0.6));
           } else {
             cfg.secs = newSecs;
           }
@@ -2325,6 +2462,19 @@ export default function App() {
       }
     });
     currentOrms[id] = Math.max(fromWeight, fromHistory);
+  });
+
+  // caliOrms: best added-weight achieved per weighted cali lift (from caliLog + current working weight)
+  var caliOrms = {};
+  Object.keys(CALI_LIFTS).forEach(function(id) {
+    var fromWeight = (st.caliWeights && st.caliWeights[id] != null) ? st.caliWeights[id] : CALI_LIFTS[id].base;
+    var fromHistory = 0;
+    (st.caliLog || []).forEach(function(session) {
+      if (session.caliLifts && session.caliLifts[id] && session.caliLifts[id].maxWeight > fromHistory) {
+        fromHistory = session.caliLifts[id].maxWeight;
+      }
+    });
+    caliOrms[id] = Math.max(fromWeight, fromHistory);
   });
 
   if (!ready) {
@@ -2615,6 +2765,10 @@ export default function App() {
         {st.mode === 1 && atab === 1 && (
           <div className="pg">
             <div style={{ fontSize:10, color:"var(--mid)", letterSpacing:"1.5px", marginBottom:14, fontWeight:700 }}>TAP TO EXPAND · SWIPE → TRAIN</div>
+            <div className="asec">
+              <div className="at">Skill Benchmarks</div>
+              <CaliBenchmarks caliOrms={caliOrms} holdLevels={st.holdLevels} />
+            </div>
             <div className="asec">
               <div className="at">Weighted Strength</div>
               {Object.keys(CALI_LIFTS).map(function(id) {
