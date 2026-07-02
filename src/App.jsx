@@ -39,11 +39,38 @@ const SCHED = [
 
 // ── CALISTHENICS ──────────────────────────────────────────────────────────────
 const HOLDS = {
-  frontlever: { name:"Front Lever",   abbr:"FL",   color:"#F87171", emoji:"🦅", kind:"static",  ladder:["Tuck","Advanced Tuck","One-Leg","Straddle","Full"], currentLevel:"Advanced Tuck",     goal:"Build to 12s → Straddle",   note:"Scapula depressed. Straight arms. Hollow body.", defSecs:7,  defSets:5, defInc:1, isReps:false, rehab:false },
-  handstand:  { name:"Wall Handstand",abbr:"WHS",  color:"#60A5FA", emoji:"🤸", kind:"static",  ladder:["Wall-facing","Chest-to-wall","Freestanding kick-up","Freestanding"], currentLevel:"Wall-facing holds", goal:"60s wall → kick-up",  note:"Chest to wall. Stack shoulders over wrists.", defSecs:20, defSets:4, defInc:5, isReps:false, rehab:false },
-  lsit:       { name:"L-Sit",         abbr:"LS",   color:"#F472B6", emoji:"🪑", kind:"static",  ladder:["Tucked","One-Leg","Full","Hanging"], currentLevel:"Tucked L-Sit",      goal:"Full to 20s",         note:"Depress shoulders. Compress hip flexors + abs.", defSecs:10, defSets:4, defInc:2, isReps:false, rehab:false },
-  hspushup:   { name:"Wall HSPU",     abbr:"HSPU", color:"#FBBF24", emoji:"💪", kind:"dynamic", ladder:["Wall negative","Wall partial","Wall full","Deficit"], currentLevel:"Negatives + partial",goal:"Strict from negatives",     note:"Control the descent. ~55kg OHP threshold.", defSecs:0,  defSets:4, defInc:0, isReps:true, defReps:3,  rehab:false },
-  muscleup:   { name:"Muscle-Up",     abbr:"MU",   color:"#9D8DF1", emoji:"🔝", kind:"dynamic", ladder:["False-grip hold","Negative","Kipping","Strict","Weighted"], currentLevel:"Negatives",         goal:"3 clean kipping → strict",   note:"False grip. Explode, turn over, press out.", defSecs:0,  defSets:4, defInc:0, isReps:true, defReps:3,  rehab:false },
+  frontlever: { name:"Front Lever",   abbr:"FL",   color:"#F87171", emoji:"🦅", kind:"static",  ladder:["Tuck","Advanced Tuck","One-Leg","Straddle","Full"], cues:{
+      "Tuck":"Hang, pull shoulder blades down, tuck knees to chest and hold body horizontal.",
+      "Advanced Tuck":"Same as tuck but open the hips so your back is flat and horizontal, knees still bent.",
+      "One-Leg":"From advanced tuck, extend ONE leg straight out. Alternate legs each set.",
+      "Straddle":"Both legs straight but spread wide apart — easier than full, holds body level.",
+      "Full":"Whole body straight and horizontal, legs together. The full front lever."
+    }, currentLevel:"Advanced Tuck", goal:"Build to 12s → Straddle", note:"Scapula depressed. Straight arms. Hollow body.", defSecs:7,  defSets:5, defInc:1, isReps:false, rehab:false },
+  handstand:  { name:"Wall Handstand",abbr:"WHS",  color:"#60A5FA", emoji:"🤸", kind:"static",  ladder:["Back-to-wall","Chest-to-wall","Kick-up (spotted)","Freestanding"], cues:{
+      "Back-to-wall":"Kick up with your BACK to the wall, heels resting on it. Easiest entry — get used to being inverted.",
+      "Chest-to-wall":"Face the wall, walk feet up until chest/stomach touch it. Stacks you straight — builds the real alignment.",
+      "Kick-up (spotted)":"Kick up away from the wall and balance, catching yourself back on it. Learning the balance point.",
+      "Freestanding":"Full freestanding handstand, no wall. Hold the balance."
+    }, currentLevel:"Back-to-wall", goal:"60s hold → kick-up", note:"Stack shoulders over wrists. Squeeze everything, look at your hands.", defSecs:20, defSets:4, defInc:5, isReps:false, rehab:false },
+  lsit:       { name:"L-Sit",         abbr:"LS",   color:"#F472B6", emoji:"🪑", kind:"static",  ladder:["Tucked","One-Leg","Full","Hanging"], cues:{
+      "Tucked":"On parallettes/floor, push shoulders down, lift hips, tuck knees to chest and hold.",
+      "One-Leg":"From tucked, extend ONE leg straight out level with hips. Alternate legs.",
+      "Full":"Both legs straight out, level with hips, toes pointed. The full L-sit.",
+      "Hanging":"Hang from a bar and raise straight legs to an L. Hardest version."
+    }, currentLevel:"Tucked L-Sit", goal:"Full to 20s", note:"Depress shoulders. Compress hip flexors + abs.", defSecs:10, defSets:4, defInc:2, isReps:false, rehab:false },
+  hspushup:   { name:"Wall HSPU",     abbr:"HSPU", color:"#FBBF24", emoji:"💪", kind:"dynamic", ladder:["Wall negative","Wall partial","Wall full","Deficit"], cues:{
+      "Wall negative":"Chest-to-wall handstand, lower yourself SLOWLY to the floor (3-5s). No press back up — reset and repeat.",
+      "Wall partial":"Lower down, press back up through the top part of the range only.",
+      "Wall full":"Full range — head lightly touches floor, press all the way back up.",
+      "Deficit":"Hands raised on books/plates so your head goes below hand level. Extra range."
+    }, currentLevel:"Wall negative", goal:"Strict from negatives", note:"Control the descent. ~55kg OHP threshold.", defSecs:0,  defSets:4, defInc:0, isReps:true, defReps:3,  rehab:false },
+  muscleup:   { name:"Muscle-Up",     abbr:"MU",   color:"#9D8DF1", emoji:"🔝", kind:"dynamic", ladder:["False-grip hold","Negative","Kipping","Strict","Weighted"], cues:{
+      "False-grip hold":"Wrist OVER the bar (bar across base of palm, not fingers). Pull chest to bar and hold 5-10s. Builds the grip + top position.",
+      "Negative":"Start at the top (above the bar, arms locked), lower yourself down SLOWLY through the transition. Jump/step to the top each rep.",
+      "Kipping":"Use a hip drive to help pull explosively over the bar. Getting the full movement pattern.",
+      "Strict":"No kip — dead hang, pull high, turn wrists over the bar, press out. The clean muscle-up.",
+      "Weighted":"Strict muscle-up with added weight on a belt."
+    }, currentLevel:"False-grip hold", goal:"3 clean kipping → strict", note:"Explode, turn over, press out.", defSecs:0,  defSets:4, defInc:0, isReps:true, defReps:3,  rehab:false },
 };
 
 // Weighted calisthenics strength — tracked in kg like barbell (added weight)
@@ -127,12 +154,29 @@ const MOTIVATIONS = [
   { q:"Man conquers the world by conquering himself.", a:"Zeno of Citium" },
   // James Clear — verified Atomic Habits
   { q:"You do not rise to the level of your goals. You fall to the level of your systems.", a:"James Clear" },
+  // More verified
+  { q:"If a man knows not to which port he sails, no wind is favorable.", a:"Seneca" },
+  { q:"Sometimes even to live is an act of courage.", a:"Seneca" },
+  { q:"As is a tale, so is life: not how long it is, but how good it is, is what matters.", a:"Seneca" },
+  { q:"No person has the power to have everything they want, but it is in their power not to want what they don't have.", a:"Seneca" },
+  { q:"Man is disturbed not by things, but by the views he takes of them.", a:"Epictetus" },
+  { q:"Circumstances don't make the man, they only reveal him to himself.", a:"Epictetus" },
+  { q:"The more we value things outside our control, the less control we have.", a:"Epictetus" },
+  { q:"If it is not right, do not do it; if it is not true, do not say it.", a:"Marcus Aurelius" },
+  { q:"Look well into thyself; there is a source of strength which will always spring up if thou wilt always look.", a:"Marcus Aurelius" },
+  { q:"Very little is needed to make a happy life; it is all within yourself, in your way of thinking.", a:"Marcus Aurelius" },
+  { q:"Dwell on the beauty of life. Watch the stars, and see yourself running with them.", a:"Marcus Aurelius" },
+  { q:"The best revenge is not to be like your enemy.", a:"Marcus Aurelius" },
+  { q:"He who fears death will never do anything worthy of a living man.", a:"Seneca" },
+  { q:"We are more often frightened than hurt; and we suffer more from imagination than from reality.", a:"Seneca" },
 ];
 
 // Random on every load — seeded by session so it doesn't flicker mid-session
-var _quoteIdx = Math.floor(Math.random() * MOTIVATIONS.length);
-function getMotivation() {
-  return MOTIVATIONS[_quoteIdx];
+function randomQuoteIdx(exclude) {
+  if (MOTIVATIONS.length <= 1) return 0;
+  var i = Math.floor(Math.random() * MOTIVATIONS.length);
+  while (i === exclude) i = Math.floor(Math.random() * MOTIVATIONS.length);
+  return i;
 }
 
 const FAIL_TEXTS = ["YOU GOT THIS","COME ON","NEXT ONE","STAY IN IT","FIGHT BACK","THAT'S GROWTH","GRIND TIME","RESET & GO"];
@@ -488,7 +532,10 @@ body{background:var(--bg);color:var(--ink);font-family:'Space Mono',monospace;fo
 .stab.on{background:var(--orange);color:#fff}
 .pg{padding:14px 12px 80px;max-width:390px;margin:0 auto}
 .motd{background:var(--yellow);border:3px solid var(--ink);border-radius:16px;padding:14px 16px;margin-bottom:16px;box-shadow:4px 4px 0 var(--ink)}
-.motd-q{font-family:'Fraunces',serif;font-style:italic;font-size:15px;line-height:1.55;color:var(--ink);margin-bottom:6px}
+.motd{position:relative}
+.qref{position:absolute;top:8px;right:8px;width:28px;height:28px;border:2px solid var(--ink);border-radius:50%;background:var(--card);cursor:pointer;font-size:14px;font-weight:900;line-height:1;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent;box-shadow:1px 1px 0 var(--ink)}
+.qref:active{transform:translate(1px,1px);box-shadow:0 0 0 var(--ink)}
+.motd-q{padding-right:32px;font-family:'Fraunces',serif;font-style:italic;font-size:15px;line-height:1.55;color:var(--ink);margin-bottom:6px}
 .motd-a{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)}
 .wtag{display:inline-flex;gap:6px;align-items:center;background:var(--yellow);border:3px solid var(--ink);border-radius:100px;padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:12px;box-shadow:2px 2px 0 var(--ink)}
 .drow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
@@ -762,6 +809,7 @@ function SkillCard(props) {
             <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#fff",background:h.color,borderRadius:6,padding:"2px 8px"}}>{level}</span>
             <span style={{color:"var(--mid)",fontWeight:700,fontSize:11}}>{tot} sets</span>
           </div>
+          {h.cues && h.cues[level] && <div className="hc-note" style={{marginTop:6}}>{h.cues[level]}</div>}
         </div>
         <div className="bc-sdots">
           {sets.map(function(s, i) {
@@ -1090,7 +1138,7 @@ function HoldCard(props) {
             <div className="hc-unit">{displayUnit}</div>
           </div>
           {level && <div style={{display:"inline-block",fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color:"#fff",background:hold.color,borderRadius:6,padding:"2px 8px",marginBottom:4}}>{level}</div>}
-          <div className="hc-note">{hold.note}</div>
+          {hold.cues && hold.cues[level] ? <div className="hc-note">{hold.cues[level]}</div> : <div className="hc-note">{hold.note}</div>}
         </div>
         <div className="bc-sdots">
           {sets.map(function(s, i) {
@@ -2261,7 +2309,9 @@ export default function App() {
     swipeX.current = null;
   }
 
-  var motiv = getMotivation();
+  var quoteIdxPair = useState(function() { return randomQuoteIdx(-1); }); var quoteIdx = quoteIdxPair[0]; var setQuoteIdx = quoteIdxPair[1];
+  var motiv = MOTIVATIONS[quoteIdx];
+  function refreshQuote() { setQuoteIdx(function(cur) { return randomQuoteIdx(cur); }); }
 
   // currentOrms: use best all-time 1RM from session log (captures PRs)
   // Fall back to working weight estimate if no history yet
@@ -2311,6 +2361,7 @@ export default function App() {
           <div className="pg">
             <div className="wtag">CYCLE <strong>{st.cycle || 1}</strong> · WEEK <strong>{today.week}</strong></div>
             <div className="motd">
+              <button className="qref" onClick={refreshQuote} aria-label="New quote">↻</button>
               <div className="motd-q">"{motiv.q}"</div>
               {motiv.a && <div className="motd-a">— {motiv.a}</div>}
             </div>
@@ -2445,6 +2496,7 @@ export default function App() {
           <div className="pg">
             <div className="wtag">CALI CYCLE <strong>{st.caliCycle || 1}</strong> · <strong>{cday.focus}</strong></div>
             <div className="motd" style={{ background:"#EDE9FE", borderColor:purple }}>
+              <button className="qref" onClick={refreshQuote} aria-label="New quote">↻</button>
               <div className="motd-q">"{motiv.q}"</div>
               {motiv.a && <div className="motd-a" style={{ color:"#7C3AED" }}>— {motiv.a}</div>}
             </div>
