@@ -617,16 +617,16 @@ var css = `
 }
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font-family:'Space Mono',monospace;font-size:13px;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-.bar{display:flex;align-items:center;gap:5px;padding:max(env(safe-area-inset-top),8px) 10px 0;height:calc(52px + max(env(safe-area-inset-top),8px));background:var(--bg);border-bottom:3px solid var(--ink);position:sticky;top:0;z-index:1000;overflow:hidden}
-.logo{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1;flex-shrink:0}
+.bar{display:flex;align-items:center;gap:6px;padding:max(env(safe-area-inset-top),8px) 8px 0;height:calc(52px + max(env(safe-area-inset-top),8px));background:var(--bg);border-bottom:3px solid var(--ink);position:sticky;top:0;z-index:1000;overflow:hidden}
+.logo{font-family:'Nunito',sans-serif;font-size:18px;font-weight:900;letter-spacing:-1px;line-height:1;flex-shrink:1;min-width:0;overflow:hidden}
 
 .bar-gap{flex:1}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--light);border:2px solid var(--rule);transition:all .3s;flex-shrink:0}
 .sdot.on{background:var(--green);border-color:var(--green)}
 .mtabs{display:flex;border:2px solid var(--ink);border-radius:100px;overflow:hidden;flex-shrink:0;box-shadow:2px 2px 0 var(--ink)}
-.mtab{padding:0 8px;height:30px;font-size:14px;background:var(--card);color:var(--mid);border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mtab{padding:0 7px;height:30px;font-size:13px;background:var(--card);color:var(--mid);border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .stabs{display:flex;border:2px solid var(--ink);border-radius:100px;overflow:hidden;flex-shrink:0;box-shadow:2px 2px 0 var(--ink)}
-.stab{padding:0 9px;height:30px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.5px;background:var(--card);color:var(--mid);border:none;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.stab{padding:0 8px;height:30px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.3px;background:var(--card);color:var(--mid);border:none;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .stab.on{background:var(--orange);color:#fff}
 .pg{padding:14px 12px 80px;max-width:390px;margin:0 auto}
 .motd{background:var(--yellow);border:3px solid var(--ink);border-radius:16px;padding:14px 16px;margin-bottom:16px;box-shadow:4px 4px 0 var(--ink)}
@@ -2652,13 +2652,13 @@ export default function App() {
 
         <div className="bar">
           <div className="logo">D<span style={{color:"#FF5C00"}}>Δ</span>DLIFTS</div>
-          <div className="bar-gap" />
           <div className={"sdot" + (saving ? " on" : "")} />
           <div className="mtabs">
             <button className="mtab" style={st.mode === 0 ? { background:acc, color:"#fff" } : {}} onClick={function() { setSt({ mode:0 }); }}>🏋️</button>
             <button className="mtab" style={st.mode === 1 ? { background:"#8B5CF6", color:"#fff" } : {}} onClick={function() { setSt({ mode:1 }); }}>🤸</button>
             <button className="mtab" style={st.mode === 2 ? { background:KB_COLOR, color:"#fff" } : {}} onClick={function() { setSt({ mode:2 }); }}>🔔</button>
           </div>
+          <div className="bar-gap" />
           <div className="stabs">
             <button className={"stab" + (atab === 0 ? " on" : "")} onClick={function() { setAtab(0); }}>TRAIN</button>
             <button className={"stab" + (atab === 1 ? " on" : "")} onClick={function() { setAtab(1); }}>STATS</button>
