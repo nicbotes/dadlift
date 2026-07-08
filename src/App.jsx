@@ -430,6 +430,7 @@ function makeDefault() {
   return {
     mode: 0, bbTab: 0, caliTab: 0, kbTab: 0, dayIdx: 0, caliDayIdx: 0, cycle: 1, caliCycle: 1, kbSession: 1, sessionLog: [], caliLog: [], kbLog: [], amrapLog: {}, caliAmrapLog: {},
     kbWeight: KB_CIRCUIT.bellKg, kbSets: makeDefaultKbSets(), kbWarmup: {},
+    enabledModes: { 0:true, 1:true, 2:true },
     weights: makeDefaultWeights(),
     progs: makeDefaultProgs(),
     liftSets: makeDefaultLiftSets(),
@@ -476,6 +477,13 @@ function normalizeState(raw) {
   if (state.kbWeight == null) state.kbWeight = KB_CIRCUIT.bellKg;
   if (!Number.isFinite(Number(state.kbTab))) state.kbTab = 0;
   if (!Number.isFinite(Number(state.kbSession))) state.kbSession = 1;
+  state.enabledModes = Object.assign({ 0:true, 1:true, 2:true }, state.enabledModes || {});
+  // Never allow all three disabled — fall back to barbell on
+  if (!state.enabledModes[0] && !state.enabledModes[1] && !state.enabledModes[2]) state.enabledModes[0] = true;
+  // If current mode is disabled, switch to first enabled
+  if (!state.enabledModes[state.mode]) {
+    state.mode = [0,1,2].find(function(m){ return state.enabledModes[m]; });
+  }
   if (!Number.isFinite(Number(state.mode))) state.mode = base.mode;
   if (!Number.isFinite(Number(state.bbTab))) state.bbTab = base.bbTab;
   if (!Number.isFinite(Number(state.caliTab))) state.caliTab = base.caliTab;
@@ -2572,6 +2580,22 @@ export default function App() {
     });
   }
 
+  function toggleMode(m) {
+    setSt(function(prev) {
+      var next = JSON.parse(JSON.stringify(prev));
+      next.enabledModes = Object.assign({ 0:true, 1:true, 2:true }, next.enabledModes);
+      var on = Object.keys(next.enabledModes).filter(function(k){ return next.enabledModes[k]; });
+      // Prevent disabling the last enabled mode
+      if (next.enabledModes[m] && on.length <= 1) return prev;
+      next.enabledModes[m] = !next.enabledModes[m];
+      // If we just disabled the active mode, jump to first enabled
+      if (!next.enabledModes[next.mode]) {
+        next.mode = [0,1,2].find(function(x){ return next.enabledModes[x]; });
+      }
+      return next;
+    });
+  }
+
   function doExport() {
     var json = JSON.stringify(st, null, 2);
     setShowExport(true);
@@ -2654,9 +2678,9 @@ export default function App() {
           <div className="logo">D<span style={{color:"#FF5C00"}}>Δ</span>DLIFTS</div>
           <div className={"sdot" + (saving ? " on" : "")} />
           <div className="mtabs">
-            <button className="mtab" style={st.mode === 0 ? { background:acc, color:"#fff" } : {}} onClick={function() { setSt({ mode:0 }); }}>🏋️</button>
-            <button className="mtab" style={st.mode === 1 ? { background:"#8B5CF6", color:"#fff" } : {}} onClick={function() { setSt({ mode:1 }); }}>🤸</button>
-            <button className="mtab" style={st.mode === 2 ? { background:KB_COLOR, color:"#fff" } : {}} onClick={function() { setSt({ mode:2 }); }}>🔔</button>
+            {(st.enabledModes||{0:true})[0] && <button className="mtab" style={st.mode === 0 ? { background:acc, color:"#fff" } : {}} onClick={function() { setSt({ mode:0 }); }}>🏋️</button>}
+            {(st.enabledModes||{})[1] && <button className="mtab" style={st.mode === 1 ? { background:"#8B5CF6", color:"#fff" } : {}} onClick={function() { setSt({ mode:1 }); }}>🤸</button>}
+            {(st.enabledModes||{})[2] && <button className="mtab" style={st.mode === 2 ? { background:KB_COLOR, color:"#fff" } : {}} onClick={function() { setSt({ mode:2 }); }}>🔔</button>}
           </div>
           <div className="bar-gap" />
           <div className="stabs">
@@ -2775,6 +2799,27 @@ export default function App() {
                 })}
               </div>
             )}
+            <div className="xsec">
+              <div className="xhd">Workouts · Show / Hide</div>
+              <div style={{ fontSize:11, color:"var(--mid)", marginBottom:10, lineHeight:1.6, fontWeight:700 }}>Turn off what you don't use. Hidden workouts disappear from the top nav. Your data is kept.</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {[{m:0,icon:"🏋️",label:"Barbell",col:acc},{m:1,icon:"🤸",label:"Calisthenics",col:"#8B5CF6"},{m:2,icon:"🔔",label:"Kettlebell",col:KB_COLOR}].map(function(row) {
+                  var on = (st.enabledModes||{})[row.m];
+                  var enabledCount = [0,1,2].filter(function(x){return (st.enabledModes||{})[x];}).length;
+                  var isLast = on && enabledCount <= 1;
+                  return (
+                    <button key={row.m} onClick={function(){ toggleMode(row.m); }} disabled={isLast}
+                      style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 14px",border:"3px solid var(--ink)",borderRadius:14,background:on?"var(--card)":"#F0F0EA",cursor:isLast?"default":"pointer",boxShadow:"2px 2px 0 var(--ink)",textAlign:"left",opacity:on?1:0.55}}>
+                      <span style={{fontSize:20}}>{row.icon}</span>
+                      <span style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:16,color:"var(--ink)",flex:1}}>{row.label}</span>
+                      <span style={{width:44,height:26,borderRadius:100,border:"2.5px solid var(--ink)",background:on?row.col:"#D5D5CD",position:"relative",flexShrink:0,transition:"background .15s"}}>
+                        <span style={{position:"absolute",top:1,left:on?20:1,width:18,height:18,borderRadius:"50%",background:"#fff",border:"2px solid var(--ink)",transition:"left .15s"}} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="xsec">
               <div className="xhd">Data · Export / Import</div>
               <div style={{ fontSize:11, color:"var(--mid)", marginBottom:10, lineHeight:1.6, fontWeight:700 }}>Export copies all your data as JSON. Paste to restore on any device.</div>
@@ -2940,6 +2985,26 @@ export default function App() {
                 return <HoldStats key={id} id={id} history={holdHistory} holdCfg={st.holdCfg} onCfg={updateHoldCfg} holdFailLog={st.holdFailLog} level={HOLDS[id].ladder[st.holdLevels[id]||0]} />;
               })}
             </div>
+            <div className="asec">
+              <div className="at">Workouts · Show / Hide</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {[{m:0,icon:"🏋️",label:"Barbell",col:acc},{m:1,icon:"🤸",label:"Calisthenics",col:"#8B5CF6"},{m:2,icon:"🔔",label:"Kettlebell",col:KB_COLOR}].map(function(row) {
+                  var on = (st.enabledModes||{})[row.m];
+                  var enabledCount = [0,1,2].filter(function(x){return (st.enabledModes||{})[x];}).length;
+                  var isLast = on && enabledCount <= 1;
+                  return (
+                    <button key={row.m} onClick={function(){ toggleMode(row.m); }} disabled={isLast}
+                      style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 14px",border:"3px solid var(--ink)",borderRadius:14,background:on?"var(--card)":"#F0F0EA",cursor:isLast?"default":"pointer",boxShadow:"2px 2px 0 var(--ink)",textAlign:"left",opacity:on?1:0.55}}>
+                      <span style={{fontSize:20}}>{row.icon}</span>
+                      <span style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:16,color:"var(--ink)",flex:1}}>{row.label}</span>
+                      <span style={{width:44,height:26,borderRadius:100,border:"2.5px solid var(--ink)",background:on?row.col:"#D5D5CD",position:"relative",flexShrink:0}}>
+                        <span style={{position:"absolute",top:1,left:on?20:1,width:18,height:18,borderRadius:"50%",background:"#fff",border:"2px solid var(--ink)"}} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="sig">built between sets<span>to stay in the game</span></div>
           </div>
         )}
@@ -3091,6 +3156,26 @@ export default function App() {
                   </div>
                 );
               })}
+            </div>
+            <div className="asec">
+              <div className="at">Workouts · Show / Hide</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {[{m:0,icon:"🏋️",label:"Barbell",col:acc},{m:1,icon:"🤸",label:"Calisthenics",col:"#8B5CF6"},{m:2,icon:"🔔",label:"Kettlebell",col:KB_COLOR}].map(function(row) {
+                  var on = (st.enabledModes||{})[row.m];
+                  var enabledCount = [0,1,2].filter(function(x){return (st.enabledModes||{})[x];}).length;
+                  var isLast = on && enabledCount <= 1;
+                  return (
+                    <button key={row.m} onClick={function(){ toggleMode(row.m); }} disabled={isLast}
+                      style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 14px",border:"3px solid var(--ink)",borderRadius:14,background:on?"var(--card)":"#F0F0EA",cursor:isLast?"default":"pointer",boxShadow:"2px 2px 0 var(--ink)",textAlign:"left",opacity:on?1:0.55}}>
+                      <span style={{fontSize:20}}>{row.icon}</span>
+                      <span style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:16,color:"var(--ink)",flex:1}}>{row.label}</span>
+                      <span style={{width:44,height:26,borderRadius:100,border:"2.5px solid var(--ink)",background:on?row.col:"#D5D5CD",position:"relative",flexShrink:0}}>
+                        <span style={{position:"absolute",top:1,left:on?20:1,width:18,height:18,borderRadius:"50%",background:"#fff",border:"2px solid var(--ink)"}} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div className="sig">built between sets<span>to stay in the game</span></div>
           </div>
