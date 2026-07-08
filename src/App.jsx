@@ -125,6 +125,57 @@ const SKILL_STANDARDS = {
   muscleup:   { label:"Muscle-Up",   color:"#9D8DF1", tiers:["False-grip hold","Negative","Kipping","Strict"] },
 };
 
+
+// ── KETTLEBELL ────────────────────────────────────────────────────────────────
+// Single-bell circuit. Fixed weight, rep/round based. Logged, not auto-progressed —
+// user watches reps & rounds climb, then graduates the bell when ready.
+const KB_COLOR = "#F59E0B";
+const KB_WARMUP = [
+  { id:"bwsquat",  name:"Bodyweight Squats" },
+  { id:"bwlunge",  name:"Bodyweight Lunges" },
+  { id:"bwhip",    name:"Bodyweight Hip Curls" },
+];
+const KB_CIRCUIT = {
+  rounds: 4,
+  bellKg: 20,
+  moves: [
+    { id:"goblet",   name:"Goblet Squat",        reps:5,  perSide:false, cue:"Bell at chest, elbows in. Sit between your heels, chest tall." },
+    { id:"kbdl",     name:"Kettlebell Deadlift",  reps:10, perSide:false, cue:"Hinge at the hips, bell between feet. Squeeze glutes at the top." },
+    { id:"kbswing",  name:"2-Hand KB Swing",      reps:10, perSide:false, cue:"Hip snap, not a squat. Bell floats to chest height. Glutes drive it." },
+    { id:"kbrow",    name:"One-Arm Row",          reps:5,  perSide:true,  cue:"Hinge, support free hand on knee. Pull elbow to hip, squeeze back." },
+    { id:"pushup",   name:"Slow Push-ups",        reps:5,  perSide:false, cue:"3s down, 1s up. Body in a straight line, elbows ~45°." },
+  ],
+};
+
+// Dan John kettlebell strength standards (bell size × reps benchmarks for men).
+// Anchored to the movements in the circuit. Sources: Dan John Strength Standards, StrengthLevel.
+const KB_STANDARDS = {
+  goblet:  { label:"Goblet Squat",  color:KB_COLOR, tiers:[
+    { label:"Beginner",     txt:"12kg × 10" },
+    { label:"Intermediate", txt:"20kg × 10", goal:true },
+    { label:"Advanced",     txt:"24kg × 10" },
+    { label:"Elite",        txt:"32kg × 10 (or double 16s)" },
+  ] },
+  kbswing: { label:"KB Swing",      color:KB_COLOR, tiers:[
+    { label:"Beginner",     txt:"16kg × 20" },
+    { label:"Intermediate", txt:"20kg × 20", goal:true },
+    { label:"Advanced",     txt:"24kg × 20" },
+    { label:"Elite",        txt:"32kg × 20" },
+  ] },
+  kbdl:    { label:"KB Deadlift",   color:KB_COLOR, tiers:[
+    { label:"Beginner",     txt:"20kg × 15" },
+    { label:"Intermediate", txt:"24kg × 15", goal:true },
+    { label:"Advanced",     txt:"32kg × 15" },
+    { label:"Elite",        txt:"double bodyweight barbell DL" },
+  ] },
+  pushup:  { label:"Push-ups",      color:KB_COLOR, tiers:[
+    { label:"Beginner",     txt:"1 clean rep" },
+    { label:"Intermediate", txt:"10 reps", goal:true },
+    { label:"Advanced",     txt:"25 reps" },
+    { label:"Elite",        txt:"40+ reps" },
+  ] },
+};
+
 // ── MOTIVATIONS ───────────────────────────────────────────────────────────────
 const MOTIVATIONS = [
   // Marcus Aurelius — verified Meditations
@@ -352,6 +403,17 @@ function makeDefaultCaliProgs() {
   return p;
 }
 
+function makeDefaultKbSets() {
+  // { moveId: [round0, round1, ...] } — each is "idle"|"done"|"fail" (per side: {L,R})
+  var s = {};
+  KB_CIRCUIT.moves.forEach(function(m) {
+    s[m.id] = Array(KB_CIRCUIT.rounds).fill(null).map(function() {
+      return m.perSide ? { L:"idle", R:"idle" } : "idle";
+    });
+  });
+  return s;
+}
+
 function makeDefaultHoldLevels() {
   // Current ladder index per hold/dyn skill
   var lv = {};
@@ -366,7 +428,8 @@ function makeDefaultHoldLevels() {
 function makeDefault() {
   var holdCfg = makeDefaultHoldCfg();
   return {
-    mode: 0, bbTab: 0, caliTab: 0, dayIdx: 0, caliDayIdx: 0, cycle: 1, caliCycle: 1, sessionLog: [], caliLog: [], amrapLog: {}, caliAmrapLog: {},
+    mode: 0, bbTab: 0, caliTab: 0, kbTab: 0, dayIdx: 0, caliDayIdx: 0, cycle: 1, caliCycle: 1, kbSession: 1, sessionLog: [], caliLog: [], kbLog: [], amrapLog: {}, caliAmrapLog: {},
+    kbWeight: KB_CIRCUIT.bellKg, kbSets: makeDefaultKbSets(), kbWarmup: {},
     weights: makeDefaultWeights(),
     progs: makeDefaultProgs(),
     liftSets: makeDefaultLiftSets(),
@@ -406,6 +469,13 @@ function normalizeState(raw) {
   state.amrapLog = Object.assign({}, state.amrapLog || {});
   state.sessionLog = Array.isArray(state.sessionLog) ? state.sessionLog : [];
   state.caliLog = Array.isArray(state.caliLog) ? state.caliLog : [];
+  state.kbLog = Array.isArray(state.kbLog) ? state.kbLog : [];
+  var kbValid = state.kbSets && typeof state.kbSets === "object" && state.kbSets[KB_CIRCUIT.moves[0].id];
+  if (!kbValid) state.kbSets = makeDefaultKbSets();
+  state.kbWarmup = state.kbWarmup || {};
+  if (state.kbWeight == null) state.kbWeight = KB_CIRCUIT.bellKg;
+  if (!Number.isFinite(Number(state.kbTab))) state.kbTab = 0;
+  if (!Number.isFinite(Number(state.kbSession))) state.kbSession = 1;
   if (!Number.isFinite(Number(state.mode))) state.mode = base.mode;
   if (!Number.isFinite(Number(state.bbTab))) state.bbTab = base.bbTab;
   if (!Number.isFinite(Number(state.caliTab))) state.caliTab = base.caliTab;
@@ -1807,10 +1877,10 @@ export default function App() {
     });
   }
 
-  var atab = st.mode === 0 ? st.bbTab : st.caliTab;
+  var atab = st.mode === 0 ? st.bbTab : st.mode === 1 ? st.caliTab : st.kbTab;
   function setAtab(t) {
     window.scrollTo(0, 0);
-    st.mode === 0 ? setSt({ bbTab:t }) : setSt({ caliTab:t });
+    st.mode === 0 ? setSt({ bbTab:t }) : st.mode === 1 ? setSt({ caliTab:t }) : setSt({ kbTab:t });
   }
 
   var today = SCHED[st.dayIdx] || SCHED[0];
@@ -2143,6 +2213,94 @@ export default function App() {
     var ns = Object.assign({}, state);
     ns.caliLog = log;
     return ns;
+  }
+
+  // ── KETTLEBELL ────────────────────────────────────────────────────────────
+  function markKbSet(moveId, round, side) {
+    setSt(function(prev) {
+      var next = JSON.parse(JSON.stringify(prev));
+      if (!next.kbSets[moveId]) next.kbSets[moveId] = makeDefaultKbSets()[moveId];
+      var cell = next.kbSets[moveId][round];
+      if (side) {
+        cell[side] = cell[side] === "done" ? "idle" : "done";
+      } else {
+        next.kbSets[moveId][round] = cell === "done" ? "idle" : "done";
+      }
+      return upsertKbSession(next);
+    });
+  }
+
+  function markKbWarmup(id) {
+    setSt(function(prev) {
+      var next = JSON.parse(JSON.stringify(prev));
+      next.kbWarmup = Object.assign({}, next.kbWarmup);
+      next.kbWarmup[id] = !next.kbWarmup[id];
+      return next;
+    });
+  }
+
+  function updateKbWeight(delta) {
+    setSt(function(prev) {
+      var next = JSON.parse(JSON.stringify(prev));
+      next.kbWeight = Math.max(4, (next.kbWeight || KB_CIRCUIT.bellKg) + delta);
+      return next;
+    });
+  }
+
+  function upsertKbSession(state) {
+    var moves = {};
+    var totalReps = 0, roundsCompleted = 0;
+    KB_CIRCUIT.moves.forEach(function(m) {
+      var sets = state.kbSets[m.id] || [];
+      var doneRounds = 0;
+      sets.forEach(function(cell) {
+        if (m.perSide) { if (cell.L === "done" && cell.R === "done") doneRounds++; }
+        else { if (cell === "done") doneRounds++; }
+      });
+      if (doneRounds > 0) {
+        var reps = doneRounds * m.reps * (m.perSide ? 2 : 1);
+        moves[m.id] = { rounds:doneRounds, reps:reps };
+        totalReps += reps * (m.id === "goblet" || m.id === "kbdl" || m.id === "kbswing" ? 1 : 1);
+      }
+    });
+    // rounds fully completed across all moves
+    var minRounds = KB_CIRCUIT.rounds;
+    KB_CIRCUIT.moves.forEach(function(m) {
+      var r = moves[m.id] ? moves[m.id].rounds : 0;
+      if (r < minRounds) minRounds = r;
+    });
+    roundsCompleted = Object.keys(moves).length === KB_CIRCUIT.moves.length ? minRounds : 0;
+    if (Object.keys(moves).length === 0) return state;
+    var snapshot = { kbSession:state.kbSession||1, weight:state.kbWeight||KB_CIRCUIT.bellKg, moves:moves, roundsCompleted:roundsCompleted, totalReps:totalReps };
+    var log = (state.kbLog || []).slice();
+    var idx = -1;
+    log.forEach(function(e, i) { if (e.kbSession === snapshot.kbSession) idx = i; });
+    if (idx >= 0) log[idx] = snapshot; else log.push(snapshot);
+    if (log.length > 200) log = log.slice(log.length - 200);
+    var ns = Object.assign({}, state);
+    ns.kbLog = log;
+    return ns;
+  }
+
+  function finishKbSession() {
+    setCelebrating(true);
+    emitBurst(Array.from({ length: 22 }, function() {
+      return { id: burstId++, type:"done", emoji: pickRandom(["🔔","💪","🔥","⚡","🏆","💥","🦾","🎉"]),
+        x: window.innerWidth/2, y: window.innerHeight/2,
+        dx:(Math.random()-0.5)*400, dy:-(Math.random()*350+100),
+        rot:(Math.random()-0.5)*720, sc:0.8+Math.random()*1.2 };
+    }));
+    setSt(function(prev) { return upsertKbSession(prev); });
+    setTimeout(function() {
+      setCelebrating(false);
+      setSt(function(prev) {
+        var next = JSON.parse(JSON.stringify(prev));
+        next.kbSession = (next.kbSession || 1) + 1;
+        next.kbSets = makeDefaultKbSets();
+        next.kbWarmup = {};
+        return next;
+      });
+    }, 1800);
   }
 
   function logCurrentCaliSession() {
@@ -2499,6 +2657,7 @@ export default function App() {
           <div className="mtabs">
             <button className="mtab" style={st.mode === 0 ? { background:acc, color:"#fff" } : {}} onClick={function() { setSt({ mode:0 }); }}>🏋️</button>
             <button className="mtab" style={st.mode === 1 ? { background:"#8B5CF6", color:"#fff" } : {}} onClick={function() { setSt({ mode:1 }); }}>🤸</button>
+            <button className="mtab" style={st.mode === 2 ? { background:KB_COLOR, color:"#fff" } : {}} onClick={function() { setSt({ mode:2 }); }}>🔔</button>
           </div>
           <div className="stabs">
             <button className={"stab" + (atab === 0 ? " on" : "")} onClick={function() { setAtab(0); }}>TRAIN</button>
@@ -2779,6 +2938,158 @@ export default function App() {
               <div className="at">Skills & Holds</div>
               {Object.keys(HOLDS).filter(function(id) { return !HOLDS[id].rehab; }).map(function(id) {
                 return <HoldStats key={id} id={id} history={holdHistory} holdCfg={st.holdCfg} onCfg={updateHoldCfg} holdFailLog={st.holdFailLog} level={HOLDS[id].ladder[st.holdLevels[id]||0]} />;
+              })}
+            </div>
+            <div className="sig">built between sets<span>to stay in the game</span></div>
+          </div>
+        )}
+
+        {/* KETTLEBELL TRAIN */}
+        {st.mode === 2 && atab === 0 && (
+          <div className="pg">
+            <div className="wtag" style={{background:KB_COLOR,borderColor:"var(--ink)"}}>🔔 SESSION <strong>{st.kbSession || 1}</strong> · {st.kbWeight || KB_CIRCUIT.bellKg}kg BELL</div>
+            <div className="motd" style={{ background:"#FEF3C7", borderColor:KB_COLOR }}>
+              <button className="qref" onClick={refreshQuote} aria-label="New quote">↻</button>
+              <div className="motd-q">"{motiv.q}"</div>
+              {motiv.a && <div className="motd-a" style={{ color:"#B45309" }}>— {motiv.a}</div>}
+            </div>
+
+            <div style={{fontSize:11,color:"var(--mid)",letterSpacing:1,fontWeight:700,margin:"4px 0 8px"}}>WARM-UP</div>
+            <div className="stack" style={{marginBottom:16}}>
+              {KB_WARMUP.map(function(w) {
+                var done = !!st.kbWarmup[w.id];
+                return (
+                  <button key={w.id} onClick={function(){ markKbWarmup(w.id); }}
+                    style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 14px",border:"3px solid var(--ink)",borderRadius:14,background:done?"var(--green-bg)":"var(--card)",cursor:"pointer",boxShadow:"2px 2px 0 var(--ink)",textAlign:"left"}}>
+                    <span style={{width:24,height:24,borderRadius:"50%",border:"2.5px solid var(--ink)",background:done?"var(--green)":"var(--card)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,flexShrink:0}}>{done?"✓":""}</span>
+                    <span style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:16,color:"var(--ink)"}}>{w.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{fontSize:11,color:"var(--mid)",letterSpacing:1,fontWeight:700,margin:"4px 0 8px"}}>CIRCUIT — {KB_CIRCUIT.rounds} ROUNDS</div>
+            <div className="stack">
+              {KB_CIRCUIT.moves.map(function(m) {
+                var sets = st.kbSets[m.id] || [];
+                var allDone = sets.every(function(cell) { return m.perSide ? (cell.L==="done"&&cell.R==="done") : cell==="done"; });
+                return (
+                  <div key={m.id} className={"bc" + (allDone ? " isdone" : "")}>
+                    <div className="bc-top">
+                      <div className="bc-dot" style={{ background: KB_COLOR }} />
+                      <div className="bc-inf">
+                        <div className="bc-name">{m.name}</div>
+                        <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:2}}>
+                          <div className="bc-w" style={{ color:KB_COLOR, fontSize:34 }}>{m.reps}</div>
+                          <div className="bc-kg">reps{m.perSide ? " / side" : ""}</div>
+                        </div>
+                        <div className="hc-note">{m.cue}</div>
+                      </div>
+                    </div>
+                    <div className="sets-row">
+                      {sets.map(function(cell, r) {
+                        if (m.perSide) {
+                          return (
+                            <div key={r} className="sblk">
+                              <div className="slbl">R{r+1}</div>
+                              <div style={{display:"flex",gap:3}}>
+                                <button className={"sd" + (cell.L==="done"?" on":"")} style={{flex:1,fontSize:11}}
+                                  onClick={function(e){ if(cell.L!=="done"){var q=e.currentTarget.getBoundingClientRect();emitBurst(makeDoneBurst(q.left+q.width/2,q.top,DONE_EMOJIS));} markKbSet(m.id,r,"L"); }}>L</button>
+                                <button className={"sd" + (cell.R==="done"?" on":"")} style={{flex:1,fontSize:11}}
+                                  onClick={function(e){ if(cell.R!=="done"){var q=e.currentTarget.getBoundingClientRect();emitBurst(makeDoneBurst(q.left+q.width/2,q.top,DONE_EMOJIS));} markKbSet(m.id,r,"R"); }}>R</button>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={r} className="sblk">
+                            <div className="slbl">R{r+1}</div>
+                            <button className={"sd" + (cell==="done"?" on":"")} style={{width:"100%"}}
+                              onClick={function(e){ if(cell!=="done"){var q=e.currentTarget.getBoundingClientRect();emitBurst(makeDoneBurst(q.left+q.width/2,q.top,DONE_EMOJIS));} markKbSet(m.id,r); }}>✓</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{marginTop:18,paddingTop:14,borderTop:"3px solid var(--ink)"}}>
+              <button onClick={finishKbSession} disabled={celebrating}
+                style={{width:"100%",padding:"16px",background:KB_COLOR,border:"3px solid var(--ink)",borderRadius:100,fontFamily:"'Nunito',sans-serif",fontSize:20,fontWeight:900,color:"#fff",cursor:"pointer",boxShadow:"3px 3px 0 var(--ink)",display:"flex",alignItems:"center",justifyContent:"center",gap:10,letterSpacing:-0.5}}>
+                ✓ FINISH SESSION
+              </button>
+              <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+                <button className="fhb" style={{borderColor:KB_COLOR,color:"#B45309"}} onClick={function() { setAtab(1); }}>STATS ▶</button>
+              </div>
+            </div>
+            <div className="sig">built between sets<span>to stay in the game</span></div>
+          </div>
+        )}
+
+        {/* KETTLEBELL STATS */}
+        {st.mode === 2 && atab === 1 && (
+          <div className="pg">
+            <div style={{ fontSize:10, color:"var(--mid)", letterSpacing:"1.5px", marginBottom:14, fontWeight:700 }}>TAP TO EXPAND · SWIPE → TRAIN</div>
+            <div className="asec">
+              <div className="at">Current Bell</div>
+              <div className="lac">
+                <div style={{ padding:"14px" }}>
+                  <div className="crow">
+                    <div className="clabel" style={{color:KB_COLOR}}>🔔 BELL</div>
+                    <div className="cst">
+                      <button className="cb" onClick={function(){updateKbWeight(-4);}}>−</button>
+                      <span className="cv">{st.kbWeight || KB_CIRCUIT.bellKg} kg</span>
+                      <button className="cb" onClick={function(){updateKbWeight(4);}}>+</button>
+                    </div>
+                  </div>
+                  <div style={{fontSize:11,color:"var(--mid)",fontWeight:700,marginTop:6}}>Bump the bell when the circuit feels easy across all 4 rounds. Bells jump ~4kg (20→24→28).</div>
+                </div>
+              </div>
+            </div>
+            <div className="asec">
+              <div className="at">Consistency</div>
+              <div className="lac">
+                <div style={{padding:"14px"}}>
+                  <div style={{display:"flex",gap:16}}>
+                    <div><div style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:28,color:KB_COLOR,lineHeight:1}}>{(st.kbLog||[]).length}</div><div style={{fontSize:10,fontWeight:700,color:"var(--mid)",letterSpacing:1}}>SESSIONS</div></div>
+                    <div><div style={{fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:28,color:"var(--ink)",lineHeight:1}}>{(st.kbLog||[]).reduce(function(a,e){return a+(e.totalReps||0);},0)}</div><div style={{fontSize:10,fontWeight:700,color:"var(--mid)",letterSpacing:1}}>TOTAL REPS</div></div>
+                  </div>
+                  <div style={{marginTop:12}}>
+                    <MiniChart data={(st.kbLog||[]).map(function(e,i){return {x:i,y:e.totalReps||0};})} color={KB_COLOR} />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="asec">
+              <div className="at">Strength Benchmarks</div>
+              {Object.keys(KB_STANDARDS).map(function(id) {
+                var std = KB_STANDARDS[id];
+                return (
+                  <div key={id} className="bm-card">
+                    <div className="bm-head">
+                      <div className="bm-dot" style={{ background:std.color }} />
+                      <div className="bm-name" style={{ color:std.color }}>{std.label}</div>
+                    </div>
+                    <div className="bm-tiers">
+                      {std.tiers.map(function(tier, i) {
+                        return (
+                          <div key={i} className="bm-tier">
+                            <div className="bm-tier-head">
+                              <span className="bm-tier-label" style={{ color: tier.goal ? std.color : "var(--ink)" }}>
+                                {tier.label}
+                                {tier.goal && <span style={{ fontSize:8, color:std.color, marginLeft:6, fontWeight:700, background:std.color+'22', borderRadius:4, padding:'1px 5px' }}>GOAL</span>}
+                              </span>
+                              <span className="bm-tier-kg" style={{ color:"var(--ink)", fontSize:11 }}>{tier.txt}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="bm-src">Dan John KB standards · StrengthLevel</div>
+                    </div>
+                  </div>
+                );
               })}
             </div>
             <div className="sig">built between sets<span>to stay in the game</span></div>
